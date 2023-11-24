@@ -55,12 +55,20 @@ public class ImageService {
                 return extractTimestamp(name1).compareTo(extractTimestamp(name2));
             });
 
+            int count = 1;
+            for (Path file : files) {
+                Path newPath = dirPath.resolve(count + ".jpeg");
+                Files.move(file, newPath);
+                count++;
+            }
+
             return files;
         } catch (IOException e) {
             e.printStackTrace();
             return Collections.emptyList();
         }
     }
+
 
     private String extractTimestamp(String filename) {
         // 파일 이름에서 timestamp 부분만 추출

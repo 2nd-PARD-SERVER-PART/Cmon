@@ -90,16 +90,13 @@ public class UploadController {
     @GetMapping(value = "/download/{filename}", produces = MediaType.IMAGE_JPEG_VALUE)
     @ResponseBody
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) throws MalformedURLException {
-        // Ensure the list of images is sorted and up-to-date
-        List<Path> sortedImages = imageService.getSortedImages(); // This call updates the sorted list
 
-        // Rest of your existing serveFile logic...
         Path filePath = Paths.get(uploadPath).resolve(filename);
         Resource file = new UrlResource(filePath.toUri());
 
         if (file.exists() && file.isReadable()) {
             return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getFilename() + "\"")
                     .body(file);
         } else {
             return ResponseEntity.notFound().build();
@@ -108,9 +105,9 @@ public class UploadController {
 
 
     @GetMapping("/sort/images")
-    public ResponseEntity<List<Path>> listSortedImages() {
+    public void listSortedImages() {
         List<Path> sortedImages = imageService.getSortedImages();
-        return ResponseEntity.ok(sortedImages);
+        return ;
     }
 
     private String makeFolder() {

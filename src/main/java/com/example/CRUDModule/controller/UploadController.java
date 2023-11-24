@@ -25,6 +25,7 @@ import java.sql.Blob;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -60,14 +61,20 @@ public class UploadController {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
+
     }
-    @GetMapping(value = "/download/{filename}",produces = MediaType.IMAGE_JPEG_VALUE)
+    @GetMapping(value = "/download/{filename}", produces = MediaType.IMAGE_JPEG_VALUE)
     @ResponseBody
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) throws MalformedURLException {
+        // Ensure the list of images is sorted and up-to-date
+        List<Path> sortedImages = imageService.getSortedImages(); // This call updates the sorted list
+
+        // Rest of your existing serveFile logic...
         Path filePath = Paths.get(uploadPath).resolve(filename);
         Resource file = new UrlResource(filePath.toUri());
 
-        if (file.exists() || file.isReadable()) {
+        if (file.exists() && file.isReadable()) {
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
                     .body(file);
@@ -77,6 +84,11 @@ public class UploadController {
     }
 
 
+    @GetMapping("/sort/images")
+    public ResponseEntity<List<Path>> listSortedImages() {
+        List<Path> sortedImages = imageService.getSortedImages();
+        return ResponseEntity.ok(sortedImages);
+    }
 
     private String makeFolder() {
         return "uplopad 시간별로 정렬";

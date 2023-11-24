@@ -3,9 +3,16 @@ package com.example.CRUDModule.service;
 import com.example.CRUDModule.entity.Image;
 import com.example.CRUDModule.repo.ImageRepo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,5 +34,41 @@ public class ImageService {
         return "이미지 전부 삭제 완료";
     }
 
+//    업로드 된 순서대로 정렬하는 api
+    @Value("/Users/juhyun/Desktop/cmon")
+    private String uploadPath;
+    public List<Path> getSortedImages() {
+        try {
+            Path dirPath = Paths.get(uploadPath);
+
+            // directory에 있는 모든 파일들 list로 가져오기
+            List<Path> files = Files.list(dirPath)
+                    .filter(Files::isRegularFile)
+                    .collect(Collectors.toList());
+
+            // 파일 이름에 있는 timestamp를 기준으로 정렬
+            files.sort((p1, p2) -> {
+                String name1 = p1.getFileName().toString();
+                String name2 = p2.getFileName().toString();
+
+                // 이름에 있는 timestamp 가져오기
+                return extractTimestamp(name1).compareTo(extractTimestamp(name2));
+            });
+
+            return files;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
+
+    private String extractTimestamp(String filename) {
+        // 파일 이름에서 timestamp 부분만 추출
+        try {
+            return filename.split("_")[1]; // timestamp 추출
+        } catch (Exception e) {
+            return ""; //파일 이름이 사용 불가면
+        }
+    }
 
 }

@@ -57,6 +57,7 @@ public class UploadController {
             long numOfImages = Files.list(dirPath)
                     .filter(Files::isRegularFile)
                     .filter(path -> path.toString().toLowerCase().endsWith(".jpg") || path.toString().toLowerCase().endsWith(".jpeg"))
+                    .peek(path -> System.out.println(path))
                     .count();
 
             return ResponseEntity.ok((int)numOfImages);
@@ -73,38 +74,47 @@ public class UploadController {
         Path filePath = Paths.get(uploadPath).resolve(filename);
         Resource file = new UrlResource(filePath.toUri());
 
-        if (file.exists() && file.isReadable()) {
-//            이미지 파일 프런트로 전송
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getFilename() + "\"")
-                    .body(file);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-//        파일 전송 후 삭제하는 플로우
 //        if (file.exists() && file.isReadable()) {
-//            try {
-//                // 프런트로 파일 전송
-//                ResponseEntity<Resource> response = ResponseEntity.ok()
-//                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getFilename() + "\"")
-//                        .body(file);
-//
-//                // 전송 후 파일 삭제
-//                Files.delete(filePath);
-//                return response;
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-//            }
+////            이미지 파일 프런트로 전송
+//            return ResponseEntity.ok()
+//                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getFilename() + "\"")
+//                    .body(file);
 //        } else {
 //            return ResponseEntity.notFound().build();
 //        }
+//        파일 전송 후 삭제하는 플로우
+        if (file.exists() && file.isReadable()) {
+            try {
+                // 프런트로 파일 전송
+                ResponseEntity<Resource> response = ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getFilename() + "\"")
+                        .body(file);
+
+                // 전송 후 파일 삭제
+                Files.delete(filePath);
+                return response;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/sort/images")
-    public void listSortedImages() {
-        List<Path> sortedImages = imageService.getSortedImages();
-        return ;
+    public ResponseEntity<Void> listSortedImages() {
+        try {
+            List<Path> sortedImages = imageService.getSortedImages(); // Get sorted images
+
+            // Rename files
+            imageService.renameFile(sortedImages);
+
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @DeleteMapping("/delete/{filename}")

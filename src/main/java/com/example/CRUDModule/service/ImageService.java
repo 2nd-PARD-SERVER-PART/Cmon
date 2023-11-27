@@ -57,7 +57,7 @@ public class ImageService {
 
             int count = 1;
             for (Path file : files) {
-                Path newPath = dirPath.resolve(count + ".jpeg");
+                Path newPath = dirPath.resolve(count + ".jpg");
                 Files.move(file, newPath);
                 count++;
             }
@@ -68,6 +68,25 @@ public class ImageService {
             return Collections.emptyList();
         }
     }
+    public void renameFile(List<Path> sortedFiles) {
+        try {
+            int count = 1;
+            for (Path file : sortedFiles) {
+                String fileExtension = getFileExtension(file.getFileName().toString());
+                Path newPath = Paths.get(uploadPath).resolve(count + "." + fileExtension);
+                Files.move(file, newPath);
+                count++;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String getFileExtension(String fileName) {
+        int dotIndex = fileName.lastIndexOf(".");
+        return dotIndex >= 0 ? fileName.substring(dotIndex + 1) : "";
+    }
+
 
 
     private String extractTimestamp(String filename) {
